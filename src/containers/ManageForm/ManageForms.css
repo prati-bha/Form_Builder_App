@@ -1,0 +1,17 @@
+.addQuestionModalContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.addQuestionModalContainer > input:not(:first-child){
+    margin-top: 20px;
+}
+
+.addButton {
+    margin-top: 20px;
+}
+
+.addQuestionModalContainer > div{
+    margin-top: 20px;
+}

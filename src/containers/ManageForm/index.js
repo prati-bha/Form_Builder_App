@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { Card, Button, Modal, Input, Select } from 'antd';
 import { compose } from 'redux';
 import { cloneDeep } from 'lodash';
+import './ManageForms.css';
 import { QUESTION_TYPES } from './constants';
 import * as actions from './actions';
 import makeSelectFormStore from './selectors';
@@ -22,15 +23,11 @@ class index extends Component {
   }
 
   handleAddQuestionSubmit = () => {
-    const { formStore, updateField } = this.props;
+    const { formStore } = this.props;
     const { questions } = this.state;
     this.setState({
       questions: [...questions, { ...formStore }]
     }, () => {
-      const objectKeys = Object.keys(initialState);
-      console.log(objectKeys)
-      objectKeys.forEach((key) => updateField(key, initialState[key]));
-      console.log("form", formStore)
       this.toggleAddQuestionModal();
     });
   }
@@ -48,7 +45,7 @@ class index extends Component {
 
   renderOptionUI = () => {
     const { formStore: { options } } = this.props;
-    return options.map((eachOption, index) => <Input placeholder={`Enter Option ${index}`} key={index} onChange={(e) => this.handleEachOptionChange(index, e)} />)
+    return options.map((eachOption, index) => <Input placeholder={`Enter Option ${index + 1}`} key={index} onChange={(e) => this.handleEachOptionChange(index, e)} />)
   }
 
   getOptions = () => {
@@ -64,25 +61,47 @@ class index extends Component {
   addOption = () => {
     const { formStore: { questionType } } = this.props;
     if (questionType && questionType.length > 0 && questionType !== QUESTION_TYPES[0].value) {
-      return <Button onClick={() => this.handleEachOptionChange()}>Add Option</Button>
+      return <Button onClick={() => this.handleEachOptionChange()} className="addButton">Add Option</Button>
     }
+  }
+  getAddQuestionDisabledCondition = () => {
+    const { formStore: { questionType, questionTitle, options } } = this.props;
+    if(questionType.length === 0 || questionTitle.length === 0) {
+      return true
+    }
+    if (questionType === QUESTION_TYPES[1].value || questionType === QUESTION_TYPES[2].value) {
+      if(options.length === 0) {
+        return true;
+      }else {
+        const emptyOptions = options.filter((option) => option.value.length === 0);
+        if(emptyOptions.length > 0) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
   renderAddQuestionModal = () => {
     const { isAddQuestionModalOpen, questionId } = this.state;
-    const { updateField } = this.props;
+    const { updateField, formStore } = this.props;
     return (
-      <Modal title={`${!questionId ? 'Add' : 'Edit'} New Question`} visible={isAddQuestionModalOpen} onCancel={this.toggleAddQuestionModal} onOk={this.handleAddQuestionSubmit}>
-        <Input onChange={e => updateField(e.target.name, e.target.value)} placeholder="Question Title" name="questionTitle"/>
-        <Select style={{ width: '100%' }} onChange={e => { updateField('questionType', e) }} placeholder="Question Type">
-          {QUESTION_TYPES.map((singleOption) => <Option key={singleOption.key} value={singleOption.value}>{singleOption.value}</Option>)}
-        </Select>
-        {this.getOptions()}
-        {this.addOption()}
+      <Modal title={`${!questionId ? 'Add' : 'Edit'} New Question`} visible={isAddQuestionModalOpen} onCancel={this.toggleAddQuestionModal} onOk={this.handleAddQuestionSubmit} okButtonProps={{disabled: this.getAddQuestionDisabledCondition()}}>
+        <div className="addQuestionModalContainer">
+          <Input value={formStore['questionTitle']} onChange={e => updateField(e.target.name, e.target.value)} placeholder="Question Title" name="questionTitle" />
+          <Select style={{ width: '100%' }} onChange={e => { updateField('questionType', e) }} placeholder="Question Type" value={formStore['questionType'] || undefined}>
+            {QUESTION_TYPES.map((singleOption) => <Option key={singleOption.key} value={singleOption.value}>{singleOption.value}</Option>)}
+          </Select>
+          {this.getOptions()}
+          {this.addOption()}
+        </div>
       </Modal>
     )
   }
   toggleAddQuestionModal = () => {
     const { isAddQuestionModalOpen } = this.state;
+    const { updateField } = this.props;
+    const objectKeys = Object.keys(initialState);
+    objectKeys.forEach((key) => { updateField(key, initialState[key]) });
     this.setState({
       isAddQuestionModalOpen: !isAddQuestionModalOpen,
     })
@@ -95,7 +114,6 @@ class index extends Component {
     )
   }
   renderSingleQuestion = (questionData) => {
-    console.log("qD", questionData)
     return <p>{questionData.questionTitle}</p>;
   }
   renderQuestions = () => {
