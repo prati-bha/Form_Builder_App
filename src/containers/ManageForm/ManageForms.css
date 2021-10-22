@@ -15,3 +15,11 @@
 .addQuestionModalContainer > div{
     margin-top: 20px;
 }
+
+.optionContainer {
+    display: flex;
+}
+.optionContainer > span {
+    margin-left: 10px;
+    font-size: 25px !important;
+}

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { createStructuredSelector } from 'reselect';
 import { connect } from 'react-redux';
 import { Card, Button, Modal, Input, Select } from 'antd';
+import { DeleteFilled } from '@ant-design/icons';
 import { compose } from 'redux';
 import { cloneDeep } from 'lodash';
 import './ManageForms.css';
@@ -32,20 +33,29 @@ class index extends Component {
     });
   }
 
-  handleEachOptionChange = (index, e) => {
+  handleEachOptionChange = (index, e, actionType) => {
     const { formStore: { options }, updateField } = this.props;
     const currentOptions = cloneDeep(options);
-    if (e) {
-      currentOptions[index].value = e.target.value;
+    if (actionType === 'delete') {
+      currentOptions.splice(index, 1);
     } else {
-      currentOptions.push({ value: '' })
+      if (e) {
+        currentOptions[index].value = e.target.value;
+      } else {
+        currentOptions.push({ value: '' })
+      }
     }
     updateField("options", currentOptions);
   }
 
   renderOptionUI = () => {
     const { formStore: { options } } = this.props;
-    return options.map((eachOption, index) => <Input placeholder={`Enter Option ${index + 1}`} key={index} onChange={(e) => this.handleEachOptionChange(index, e)} />)
+    return options.map((eachOption, index) => {
+      return (<div key={index} className="optionContainer">
+        <Input placeholder={`Enter Option ${index + 1}`} onChange={(e) => this.handleEachOptionChange(index, e)} />
+        {options.length > 1 && index > 0 && <DeleteFilled title="delete option" onClick={() => this.handleEachOptionChange(index, '', 'delete')} />}
+      </div>)
+    })
   }
 
   getOptions = () => {
@@ -66,29 +76,37 @@ class index extends Component {
   }
   getAddQuestionDisabledCondition = () => {
     const { formStore: { questionType, questionTitle, options } } = this.props;
-    if(questionType.length === 0 || questionTitle.length === 0) {
+    if (questionType.length === 0 || questionTitle.length === 0) {
       return true
     }
     if (questionType === QUESTION_TYPES[1].value || questionType === QUESTION_TYPES[2].value) {
-      if(options.length === 0) {
+      if (options.length === 0) {
         return true;
-      }else {
+      } else {
         const emptyOptions = options.filter((option) => option.value.length === 0);
-        if(emptyOptions.length > 0) {
+        if (emptyOptions.length > 0) {
           return true;
         }
       }
     }
     return false;
   }
+
+  handleOptionChange = (e) => {
+    const { updateField } = this.props;
+    if(e === QUESTION_TYPES[0].value) {
+      updateField('options', []);
+    }
+    updateField('questionType', e);
+  }
   renderAddQuestionModal = () => {
     const { isAddQuestionModalOpen, questionId } = this.state;
     const { updateField, formStore } = this.props;
     return (
-      <Modal title={`${!questionId ? 'Add' : 'Edit'} New Question`} visible={isAddQuestionModalOpen} onCancel={this.toggleAddQuestionModal} onOk={this.handleAddQuestionSubmit} okButtonProps={{disabled: this.getAddQuestionDisabledCondition()}}>
+      <Modal title={`${!questionId ? 'Add' : 'Edit'} New Question`} visible={isAddQuestionModalOpen} onCancel={this.toggleAddQuestionModal} onOk={this.handleAddQuestionSubmit} okButtonProps={{ disabled: this.getAddQuestionDisabledCondition() }}>
         <div className="addQuestionModalContainer">
           <Input value={formStore['questionTitle']} onChange={e => updateField(e.target.name, e.target.value)} placeholder="Question Title" name="questionTitle" />
-          <Select style={{ width: '100%' }} onChange={e => { updateField('questionType', e) }} placeholder="Question Type" value={formStore['questionType'] || undefined}>
+          <Select style={{ width: '100%' }} onChange={e => this.handleOptionChange(e)} placeholder="Question Type" value={formStore['questionType'] || undefined}>
             {QUESTION_TYPES.map((singleOption) => <Option key={singleOption.key} value={singleOption.value}>{singleOption.value}</Option>)}
           </Select>
           {this.getOptions()}
@@ -113,13 +131,13 @@ class index extends Component {
       </Button>
     )
   }
-  renderSingleQuestion = (questionData) => {
-    return <p>{questionData.questionTitle}</p>;
+  renderSingleQuestion = (questionData, index) => {
+    return <p key={index}>{questionData.questionTitle}</p>;
   }
   renderQuestions = () => {
     const { questions } = this.state;
     return (
-      <div>{questions.map((eachQuestion) => this.renderSingleQuestion(eachQuestion))}</div>
+      <div>{questions.map((eachQuestion, index) => this.renderSingleQuestion(eachQuestion, index))}</div>
     )
   }
   render() {
