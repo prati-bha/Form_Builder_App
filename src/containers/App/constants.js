@@ -1,0 +1,1 @@
+export const LOAD_APP = 'form-builder-app/containers/App/LOAD_APP';
