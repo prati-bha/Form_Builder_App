@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { createStructuredSelector } from 'reselect';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router-dom';
 import { Card, Button, Modal, Result, Input, Select, Radio, Space, Checkbox } from 'antd';
 import { DeleteFilled, PlusCircleOutlined } from '@ant-design/icons';
 import { compose } from 'redux';
@@ -10,6 +11,7 @@ import { EMPTY_VIEW_MESSAGE, NEW_QUESTION_KEYS, QUESTION_TYPES } from './constan
 import * as actions from './actions';
 import makeSelectFormStore from './selectors';
 import { initialState } from './reducer';
+import { ROUTES } from '../constants';
 
 const { Option } = Select;
 
@@ -22,6 +24,12 @@ class index extends Component {
     }
   }
 
+  componentDidMount() {
+    const { history: { location: { state } }, updateField } = this.props;
+    if (state && state.formName) {
+      updateField("formName", state.formName)
+    }
+  }
 
   componentDidUpdate(props) {
     if (!isEqual(props.formStore.questions, this.props.formStore.questions)) {
@@ -226,6 +234,9 @@ class index extends Component {
     Object.entries(initialState).forEach((key) => {
       updateField(key[0], initialState[key[0]])
     });
+    this.props.history.push({
+      pathname: ROUTES.HOME,
+    });
   }
 
   handleFormSubmit = () => {
@@ -279,4 +290,4 @@ const withConnect = connect(
   mapDispatchToProps,
 );
 
-export default compose(withConnect)(index);
+export default compose(withConnect)(withRouter(index));
