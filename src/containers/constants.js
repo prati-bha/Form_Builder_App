@@ -1,0 +1,1 @@
+export const FORMS_STORAGE_KEY = "Forms";

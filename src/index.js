@@ -3,7 +3,8 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import configureStore from '../src/app/store';
 import './index.css';
-import App from './containers/CreateForm';
+import 'antd/dist/antd.css'; 
+import App from './containers/ManageForm';
 import reportWebVitals from './reportWebVitals';
 const store = configureStore();
 ReactDOM.render(
