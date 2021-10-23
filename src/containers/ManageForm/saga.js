@@ -10,16 +10,24 @@ export function* submitData() {
   const parsedForm = JSON.parse(currentForms);
   const formStore = yield select(makeSelectFormStore());
   const formObject = {
-    uniqueFormSlug: `form_${moment().valueOf()}`,
     formName: formStore.formName,
     questions: formStore.questions,
     createdAt: new Date(),
   }
   if (parsedForm && parsedForm.length > 0) {
-    const updatedForm = [...parsedForm, formObject];
+    let updatedForm;
+    if (!(formStore.uniqueFormSlug && formStore.uniqueFormSlug.length > 0)) {
+      formObject.uniqueFormSlug = `form_${moment().valueOf()}`;
+      updatedForm = [...parsedForm, formObject];
+    } else {
+      const otherForms = parsedForm.filter((eachForm) => eachForm.uniqueFormSlug !== formStore.uniqueFormSlug);
+      formObject.uniqueFormSlug = formStore.uniqueFormSlug;
+      updatedForm = [...otherForms, formObject];
+    }
     const arrayStringified = JSON.stringify(updatedForm);
-    localStorage.setItem(FORMS_STORAGE_KEY, arrayStringified)
+    localStorage.setItem(FORMS_STORAGE_KEY, arrayStringified);
   } else {
+    formObject.uniqueFormSlug = `form_${moment().valueOf()}`;
     const formArray = [formObject];
     const arrayStringified = JSON.stringify(formArray);
     localStorage.setItem(FORMS_STORAGE_KEY, arrayStringified);

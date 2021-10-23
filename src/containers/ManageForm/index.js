@@ -11,7 +11,7 @@ import { EMPTY_VIEW_MESSAGE, NEW_QUESTION_KEYS, QUESTION_TYPES } from './constan
 import * as actions from './actions';
 import makeSelectFormStore from './selectors';
 import { initialState } from './reducer';
-import { ROUTES } from '../constants';
+import { FORMS_STORAGE_KEY, ROUTES } from '../constants';
 
 const { Option } = Select;
 
@@ -25,9 +25,23 @@ class index extends Component {
   }
 
   componentDidMount() {
-    const { history: { location: { state } }, updateField } = this.props;
-    if (state && state.formName) {
-      updateField("formName", state.formName)
+    const { history: { location: { state }, location }, updateField } = this.props;
+    const pathNames = location.pathname.split('/');
+    if (pathNames && pathNames.length > 2) {
+      const currentForms = localStorage.getItem(FORMS_STORAGE_KEY);
+      const parsedForm = JSON.parse(currentForms);
+      if (parsedForm && parsedForm.length > 0) {
+        const actualForm = parsedForm.find((eachForm) => eachForm.uniqueFormSlug === pathNames[pathNames.length - 1]);
+        Object.entries(initialState).forEach((key) => {
+          if (!NEW_QUESTION_KEYS.some((allowedKey) => allowedKey === key[0])) {
+            updateField(key[0], actualForm[key[0]])
+          }
+        });
+      }
+    } else {
+      if (state && state.formName) {
+        updateField("formName", state.formName)
+      }
     }
   }
 
@@ -245,10 +259,11 @@ class index extends Component {
   }
 
   renderSubmitPanel = () => {
+    const { formStore: { questions } } = this.props;
     return (
       <div className="submitPanelContainer">
         <Button onClick={this.handleFormCancel}>Cancel</Button>
-        <Button onClick={this.handleFormSubmit}>Submit</Button>
+        <Button disabled={questions.length === 0} onClick={this.handleFormSubmit}>Submit</Button>
       </div>
     )
   }
