@@ -52,10 +52,10 @@ class index extends Component {
     }
 
     renderNewFormModal = () => {
-        const { isAddFormModalOpen, formName } = this.state;
+        const { isAddFormModalOpen, formName, loading } = this.state;
         return (
             <>
-                <Button onClick={this.toggleAddFormModal}>Add Form</Button>
+                <Button type="primary" disabled={loading} onClick={this.toggleAddFormModal}>Add Form</Button>
                 <Modal title={`Add New Form`} visible={isAddFormModalOpen} onCancel={this.toggleAddFormModal} onOk={this.handleNewForm} okButtonProps={{ disabled: formName.length === 0 }}>
                     <div className="addFormModalContainer">
                         Form Name : <Input value={formName} onChange={e => this.setState({ formName: e.target.value })} placeholder="Form Name" />

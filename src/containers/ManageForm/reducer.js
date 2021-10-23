@@ -6,9 +6,9 @@ export const initialState = {
   questionType: '',
   options: [],
 
-  answer: '',
-  questions: [], 
+  questions: [],
   formName: '',
+  uniqueFormSlug: '',
 };
 
 /* eslint-disable default-case, no-param-reassign */
