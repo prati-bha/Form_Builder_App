@@ -162,6 +162,7 @@ class index extends Component {
                 <Radio
                   key={option.value}
                   value={option.value}
+                  disabled
                 >
                   {option.value}
                 </Radio>
@@ -177,6 +178,7 @@ class index extends Component {
                 <Checkbox
                   key={option.value}
                   value={option.value}
+                  disabled
                 >
                   {option.value}
                 </Checkbox>
@@ -189,12 +191,22 @@ class index extends Component {
     }
   }
 
+  handleDeleteQuestion = (index) => {
+    const { formStore: { questions }, updateField } = this.props;
+    const currentQuestions = cloneDeep(questions);
+    currentQuestions.splice(index, 1);
+    updateField("questions", currentQuestions);
+  }
+
+  renderDeleteQuestion = (index) => <Button onClick={() => this.handleDeleteQuestion(index)}><DeleteFilled /></Button>;
+
   renderSingleQuestion = (questionData, index) => {
     return (<Card
       style={{ marginTop: 16 }}
       type="inner"
       title={questionData.questionTitle}
       key={`card_${index}`}
+      extra={this.renderDeleteQuestion(index)}
     >
       {this.renderQuestionUI(questionData, index)}
     </Card>)
@@ -209,6 +221,13 @@ class index extends Component {
     )
   }
 
+  handleFormCancel = () => {
+    const { updateField } = this.props;
+    Object.entries(initialState).forEach((key) => {
+      updateField(key[0], initialState[key[0]])
+    });
+  }
+
   handleFormSubmit = () => {
     const { submitData } = this.props;
     submitData();
@@ -217,7 +236,7 @@ class index extends Component {
   renderSubmitPanel = () => {
     return (
       <div className="submitPanelContainer">
-        <Button>Cancel</Button>
+        <Button onClick={this.handleFormCancel}>Cancel</Button>
         <Button onClick={this.handleFormSubmit}>Submit</Button>
       </div>
     )
