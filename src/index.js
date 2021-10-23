@@ -1,16 +1,21 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
+import { ConnectedRouter } from 'connected-react-router';
+import history from './utils/history';
 import configureStore from '../src/app/store';
 import './index.css';
-import 'antd/dist/antd.css'; 
-import App from './containers/ManageForm';
+import 'antd/dist/antd.css';
+import App from './containers/App/index';
 import reportWebVitals from './reportWebVitals';
 const store = configureStore();
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
+      <ConnectedRouter history={history}>
+        <App />
+      </ConnectedRouter>
+
     </Provider>
   </React.StrictMode>,
   document.getElementById('root')
