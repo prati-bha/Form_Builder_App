@@ -11,3 +11,7 @@ export const QUESTION_TYPES = [{
     key: 'radio',
     value: 'Single Selection Radio Button'
 }];
+
+export const EMPTY_VIEW_MESSAGE = "Start by adding question";
+
+export const NEW_QUESTION_KEYS = ['questionType', 'questionTitle', 'options'];

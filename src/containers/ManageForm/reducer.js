@@ -5,7 +5,10 @@ export const initialState = {
   questionTitle: '',
   questionType: '',
   options: [],
+
   answer: '',
+  questions: [], 
+  formName: '',
 };
 
 /* eslint-disable default-case, no-param-reassign */

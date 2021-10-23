@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import { createStructuredSelector } from 'reselect';
 import { connect } from 'react-redux';
-import { Card, Button, Modal, Input, Select } from 'antd';
-import { DeleteFilled } from '@ant-design/icons';
+import { Card, Button, Modal, Result, Input, Select, Radio, Space, Checkbox } from 'antd';
+import { DeleteFilled, PlusCircleOutlined } from '@ant-design/icons';
 import { compose } from 'redux';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash';
 import './ManageForms.css';
-import { QUESTION_TYPES } from './constants';
+import { EMPTY_VIEW_MESSAGE, NEW_QUESTION_KEYS, QUESTION_TYPES } from './constants';
 import * as actions from './actions';
 import makeSelectFormStore from './selectors';
 import { initialState } from './reducer';
@@ -19,18 +19,28 @@ class index extends Component {
     this.state = {
       isAddQuestionModalOpen: false,
       questionId: '',
-      questions: [],
+    }
+  }
+
+
+  componentDidUpdate(props) {
+    if (!isEqual(props.formStore.questions, this.props.formStore.questions)) {
+      this.forceUpdate();
     }
   }
 
   handleAddQuestionSubmit = () => {
-    const { formStore } = this.props;
-    const { questions } = this.state;
-    this.setState({
-      questions: [...questions, { ...formStore }]
-    }, () => {
-      this.toggleAddQuestionModal();
+    const { formStore, updateField } = this.props;
+    const currentQuestions = cloneDeep(formStore.questions);
+    let newQuestion = {}
+    Object.entries(formStore).forEach((key) => {
+      if (NEW_QUESTION_KEYS.some((allowedKey) => allowedKey === key[0])) {
+        newQuestion[key[0]] = key[1];
+      }
     });
+    const updatedQuestions = [...currentQuestions, { ...newQuestion }];
+    updateField("questions", cloneDeep([...updatedQuestions]));
+    this.toggleAddQuestionModal();
   }
 
   handleEachOptionChange = (index, e, actionType) => {
@@ -68,12 +78,14 @@ class index extends Component {
       }
     }
   }
+
   addOption = () => {
     const { formStore: { questionType } } = this.props;
     if (questionType && questionType.length > 0 && questionType !== QUESTION_TYPES[0].value) {
       return <Button onClick={() => this.handleEachOptionChange()} className="addButton">Add Option</Button>
     }
   }
+
   getAddQuestionDisabledCondition = () => {
     const { formStore: { questionType, questionTitle, options } } = this.props;
     if (questionType.length === 0 || questionTitle.length === 0) {
@@ -94,11 +106,12 @@ class index extends Component {
 
   handleOptionChange = (e) => {
     const { updateField } = this.props;
-    if(e === QUESTION_TYPES[0].value) {
+    if (e === QUESTION_TYPES[0].value) {
       updateField('options', []);
     }
     updateField('questionType', e);
   }
+
   renderAddQuestionModal = () => {
     const { isAddQuestionModalOpen, questionId } = this.state;
     const { updateField, formStore } = this.props;
@@ -115,15 +128,20 @@ class index extends Component {
       </Modal>
     )
   }
+
   toggleAddQuestionModal = () => {
     const { isAddQuestionModalOpen } = this.state;
     const { updateField } = this.props;
-    const objectKeys = Object.keys(initialState);
-    objectKeys.forEach((key) => { updateField(key, initialState[key]) });
+    Object.entries(initialState).forEach((key) => {
+      if (NEW_QUESTION_KEYS.some((allowedKey) => allowedKey === key[0])) {
+        updateField(key[0], initialState[key[0]])
+      }
+    });
     this.setState({
       isAddQuestionModalOpen: !isAddQuestionModalOpen,
     })
   }
+
   renderAddQuestionButton = () => {
     return (
       <Button type="primary" onClick={() => this.toggleAddQuestionModal()}>
@@ -131,21 +149,97 @@ class index extends Component {
       </Button>
     )
   }
-  renderSingleQuestion = (questionData, index) => {
-    return <p key={index}>{questionData.questionTitle}</p>;
+
+  renderQuestionUI = (questionData, index) => {
+    switch (questionData.questionType) {
+      case QUESTION_TYPES[0].value:
+        return <Input placeholder="Text" disabled />
+      case QUESTION_TYPES[2].value:
+        return (
+          <Radio.Group>
+            <Space direction="vertical">
+              {questionData.options.map((option) =>
+                <Radio
+                  key={option.value}
+                  value={option.value}
+                >
+                  {option.value}
+                </Radio>
+              )}
+            </Space>
+          </Radio.Group>
+        )
+      case QUESTION_TYPES[1].value:
+        return (
+          <Checkbox.Group>
+            <Space direction="vertical">
+              {questionData.options.map((option) =>
+                <Checkbox
+                  key={option.value}
+                  value={option.value}
+                >
+                  {option.value}
+                </Checkbox>
+              )}
+            </Space>
+          </Checkbox.Group>
+        )
+      default:
+        return
+    }
   }
+
+  renderSingleQuestion = (questionData, index) => {
+    return (<Card
+      style={{ marginTop: 16 }}
+      type="inner"
+      title={questionData.questionTitle}
+      key={`card_${index}`}
+    >
+      {this.renderQuestionUI(questionData, index)}
+    </Card>)
+  }
+
   renderQuestions = () => {
-    const { questions } = this.state;
+    const { formStore: { questions } } = this.props;
     return (
-      <div>{questions.map((eachQuestion, index) => this.renderSingleQuestion(eachQuestion, index))}</div>
+      <div>
+        {questions.map((eachQuestion, index) => this.renderSingleQuestion(eachQuestion, index))}
+      </div>
+    )
+  }
+
+  handleFormSubmit = () => {
+    const { submitData } = this.props;
+    submitData();
+  }
+
+  renderSubmitPanel = () => {
+    return (
+      <div className="submitPanelContainer">
+        <Button>Cancel</Button>
+        <Button onClick={this.handleFormSubmit}>Submit</Button>
+      </div>
+    )
+  }
+
+  renderEmptyPanel = () => {
+    return (
+      <div className="noChats ">
+        <Result icon={<PlusCircleOutlined />} title={EMPTY_VIEW_MESSAGE} />
+      </div>
     )
   }
   render() {
+    const { formStore: { questions, formName } } = this.props;
     return (
-      <Card title={"this.props.formTitle"} extra={this.renderAddQuestionButton()} >
-        {this.renderQuestions()}
-        {this.renderAddQuestionModal()}
-      </Card>
+      <div className="mainCardContainer">
+        <Card title={formName} bordered={true} extra={this.renderAddQuestionButton()} actions={[questions.length > 0 && this.renderSubmitPanel()]}>
+          {this.renderQuestions()}
+          {this.renderAddQuestionModal()}
+          {!questions.length > 0 && this.renderEmptyPanel()}
+        </Card>
+      </div>
     );
   }
 }
